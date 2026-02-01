@@ -1,22 +1,16 @@
-package main
+package service
 
 import (
 	"context"
 	"newTaskManagerApi/internal/domain"
+	"newTaskManagerApi/internal/ports"
 )
 
-type TaskRepository interface {
-	Create(ctx context.Context, title string) (*domain.Task, error)
-	GetAllTasks(ctx context.Context) ([]*domain.Task, error)
-	UpdateTaskStatus(ctx context.Context, ID string, status bool) (*domain.Task, error)
-	DeleteTask(ctx context.Context, ID string) error
-}
-
 type TaskService struct {
-	repo TaskRepository
+	repo ports.TaskRepository
 }
 
-func NewTaskService(repo TaskRepository) *TaskService {
+func NewTaskService(repo ports.TaskRepository) *TaskService {
 	return &TaskService{repo: repo}
 }
 
