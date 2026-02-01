@@ -1,7 +1,96 @@
 package repository
 
+import (
+	"context"
+	"newTaskManagerApi/internal/domain"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
 type TaskModel struct {
-	ID         int64  `gorm:"primaryKey;type:uuid"`
-	Title      string `gorm:"not null"`
-	Compeleted bool   `gorm:"not null"`
+	ID        string `gorm:"primaryKey;type:uuid"`
+	Title     string `gorm:"not null"`
+	Completed bool   `gorm:"not null"`
+}
+
+func (TaskModel) TableName() string {
+	return "tasks"
+}
+
+type taskRepository struct {
+	db *gorm.DB
+}
+
+func NewTaskRepository(db *gorm.DB) domain.TaskRepository {
+	return &taskRepository{db: db}
+}
+
+func (repo *taskRepository) Create(ctx context.Context, title string) (*domain.Task, error) {
+	model := &TaskModel{
+		ID:        uuid.New().String(),
+		Title:     title,
+		Completed: false,
+	}
+
+	err := repo.db.WithContext(ctx).Create(model).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return toDomain(model), nil
+}
+
+func (repo *taskRepository) GetAllTasks(ctx context.Context) ([]*domain.Task, error) {
+	var models []TaskModel
+
+	err := repo.db.WithContext(ctx).Find(&models).Error
+	if err != nil {
+		return nil, err
+	}
+
+	tasks := make([]*domain.Task, len(models))
+	for idx, model := range models {
+		tasks[idx] = toDomain(&model)
+	}
+	return tasks, nil
+}
+
+func (repo *taskRepository) UpdateTaskStatus(
+	ctx context.Context, ID string, status bool,
+) (*domain.Task, error) {
+	var model TaskModel
+
+	err := repo.db.WithContext(ctx).Where("id = ?", ID).First(&model).Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = repo.db.WithContext(ctx).
+		Model(&TaskModel{}).
+		Where("id = ?", ID).
+		Update("completed", status).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	model.Completed = status
+
+	task := toDomain(&model)
+	return task, nil
+}
+
+func (repo *taskRepository) DeleteTask(ctx context.Context, ID string) error {
+	var model TaskModel
+	return repo.db.WithContext(ctx).Delete(&model, "ID = ?", ID).Error
+}
+
+func toDomain(model *TaskModel) *domain.Task {
+	return &domain.Task{
+		ID:        model.ID,
+		Title:     model.Title,
+		Completed: model.Completed,
+	}
 }
