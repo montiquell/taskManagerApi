@@ -22,7 +22,7 @@ type taskRepository struct {
 	db *gorm.DB
 }
 
-func NewTaskRepository(db *gorm.DB) domain.TaskRepository {
+func NewTaskRepository(db *gorm.DB) *taskRepository {
 	return &taskRepository{db: db}
 }
 
