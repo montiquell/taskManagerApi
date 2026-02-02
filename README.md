@@ -7,7 +7,7 @@
 ### 1. Клонируй репозиторий и перейди в папку проекта
 
 ```
-git clone <url>
+git clone https://github.com/setteroftrends/taskManagerApi.git
 cd taskManagerApi
 ```
 
