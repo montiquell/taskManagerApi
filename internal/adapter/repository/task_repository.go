@@ -34,7 +34,9 @@ func (repo *taskRepository) Create(ctx context.Context, title string) (*domain.T
 	}
 
 	err := repo.db.WithContext(ctx).Create(model).Error
-	if err != nil {
+	if err == gorm.ErrDuplicatedKey {
+		return nil, domain.ErrAlreadyExists
+	} else if err != nil {
 		return nil, err
 	}
 
@@ -62,7 +64,9 @@ func (repo *taskRepository) UpdateTaskStatus(
 	var model TaskModel
 
 	err := repo.db.WithContext(ctx).Where("id = ?", ID).First(&model).Error
-	if err != nil {
+	if err == gorm.ErrRecordNotFound {
+		return nil, domain.ErrNotFound
+	} else if err != nil {
 		return nil, err
 	}
 
@@ -84,7 +88,13 @@ func (repo *taskRepository) UpdateTaskStatus(
 
 func (repo *taskRepository) DeleteTask(ctx context.Context, ID string) error {
 	var model TaskModel
-	return repo.db.WithContext(ctx).Delete(&model, "ID = ?", ID).Error
+	err := repo.db.WithContext(ctx).Delete(&model, "ID = ?", ID).Error
+	if err == gorm.ErrRecordNotFound {
+		return domain.ErrNotFound
+	} else if err != nil {
+		return err
+	}
+	return nil
 }
 
 func toDomain(model *TaskModel) *domain.Task {
