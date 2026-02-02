@@ -7,7 +7,7 @@
 ### 1. Клонируй репозиторий и перейди в папку проекта
 
 ```
-git clone https://github.com/setteroftrends/taskManagerApi.git
+git clone https://github.com/montiquell/taskManagerApi.git
 cd taskManagerApi
 ```
 
