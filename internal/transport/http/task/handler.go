@@ -42,9 +42,14 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(req.Title) == 0 {
+		respondError(w, http.StatusBadRequest, "invalid title")
+	}
+
 	task, err := h.service.Create(r.Context(), req.Title)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	respondJSON(w, http.StatusCreated, toDTO(*task))
@@ -78,9 +83,10 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 	task, err := h.service.UpdateTaskStatus(r.Context(), id, req.Completed)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
-	respondJSON(w, http.StatusOK, task)
+	respondJSON(w, http.StatusOK, toDTO(*task))
 }
 
 func (h *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {

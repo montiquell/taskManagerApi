@@ -87,13 +87,16 @@ func (repo *taskRepository) UpdateTaskStatus(
 }
 
 func (repo *taskRepository) DeleteTask(ctx context.Context, ID string) error {
-	var model TaskModel
-	err := repo.db.WithContext(ctx).Delete(&model, "ID = ?", ID).Error
-	if err == gorm.ErrRecordNotFound {
-		return domain.ErrNotFound
-	} else if err != nil {
-		return err
+	result := repo.db.WithContext(ctx).Where("id = ?", ID).Delete(&TaskModel{})
+
+	if result.Error != nil {
+		return result.Error
 	}
+
+	if result.RowsAffected == 0 {
+		return domain.ErrNotFound
+	}
+
 	return nil
 }
 
