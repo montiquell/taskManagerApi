@@ -38,17 +38,13 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid body")
+		respondError(w, statusCode(err), "invalid body")
 		return
-	}
-
-	if len(req.Title) == 0 {
-		respondError(w, http.StatusBadRequest, "invalid title")
 	}
 
 	task, err := h.service.Create(r.Context(), req.Title)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		respondError(w, statusCode(err), err.Error())
 		return
 	}
 
@@ -58,7 +54,7 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	tasks, err := h.service.GetAllTasks(r.Context())
 	if err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		respondError(w, statusCode(err), err.Error())
 		return
 	}
 
@@ -67,7 +63,7 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		DTOTasks = append(DTOTasks, toDTO(*v))
 	}
 
-	respondJSON(w, http.StatusOK, DTOTasks)
+	respondJSON(w, statusCode(err), DTOTasks)
 }
 
 func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -76,17 +72,17 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "invalid body")
+		respondError(w, statusCode(err), "invalid body")
 		return
 	}
 
 	task, err := h.service.UpdateTaskStatus(r.Context(), id, req.Completed)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		respondError(w, statusCode(err), err.Error())
 		return
 	}
 
-	respondJSON(w, http.StatusOK, toDTO(*task))
+	respondJSON(w, statusCode(err), toDTO(*task))
 }
 
 func (h *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -94,10 +90,11 @@ func (h *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.DeleteTask(r.Context(), id)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		respondError(w, statusCode(err), err.Error())
+		return
 	}
 
-	respondJSON(w, http.StatusOK, map[string]string{"message": "Deleted"})
+	respondJSON(w, statusCode(err), map[string]string{"message": "Deleted"})
 }
 
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
@@ -116,4 +113,20 @@ func toDTO(domainModel domain.Task) TaskRead {
 		Title:     domainModel.Title,
 		Completed: domainModel.Completed,
 	}
+}
+
+func statusCode(err error) int {
+	if err == nil {
+		return http.StatusOK
+	}
+	if err == domain.ErrNotFound {
+		return http.StatusNotFound
+	}
+	if err == domain.ErrAlreadyExists {
+		return http.StatusConflict
+	}
+	if err == domain.ErrInvalidTitle {
+		return http.StatusBadRequest
+	}
+	return http.StatusInternalServerError
 }

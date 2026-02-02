@@ -4,6 +4,7 @@ import (
 	"context"
 	"newTaskManagerApi/internal/domain"
 	"newTaskManagerApi/internal/ports"
+	"strings"
 )
 
 type TaskService struct {
@@ -15,6 +16,9 @@ func NewTaskService(repo ports.TaskRepository) *TaskService {
 }
 
 func (s *TaskService) Create(ctx context.Context, title string) (*domain.Task, error) {
+	if 100 < len(title) || len(strings.TrimSpace(title)) < 1 {
+		return nil, domain.ErrInvalidTitle
+	}
 	return s.repo.Create(ctx, title)
 }
 

@@ -1,7 +1,8 @@
 package router
 
 import (
-	handler "newTaskManagerApi/internal/transport/http/task"
+	"net/http"
+	handler "newTaskManagerApi/internal/transport/http/v1/task"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -20,13 +21,22 @@ func NewRouter(taskHandler *handler.TaskHandler) *chi.Mux {
 		},
 	}))
 
+	r.Route("/health", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("OK"))
+		})
+	})
+
 	r.Route(
 		"/api", func(r chi.Router) {
-			r.Route("/todos", func(r chi.Router) {
-				r.Post("/", taskHandler.Create)
-				r.Get("/", taskHandler.GetAllTasks)
-				r.Patch("/{id}", taskHandler.Update)
-				r.Delete("/{id}", taskHandler.Delete)
+			r.Route("/v1", func(r chi.Router) {
+				r.Route("/todos", func(r chi.Router) {
+					r.Post("/", taskHandler.Create)
+					r.Get("/", taskHandler.GetAllTasks)
+					r.Patch("/{id}", taskHandler.Update)
+					r.Delete("/{id}", taskHandler.Delete)
+				})
 			})
 		},
 	)

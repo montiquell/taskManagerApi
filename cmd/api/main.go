@@ -8,7 +8,7 @@ import (
 	"newTaskManagerApi/internal/config"
 	"newTaskManagerApi/internal/service"
 	router "newTaskManagerApi/internal/transport/http"
-	handler "newTaskManagerApi/internal/transport/http/task"
+	handler "newTaskManagerApi/internal/transport/http/v1/task"
 	"os"
 	"os/signal"
 	"syscall"
@@ -32,11 +32,11 @@ func main() {
 	r := router.NewRouter(taskHandler)
 
 	server := &http.Server{
-		Addr:         ":8080",
+		Addr:         cfg.ADDR,
 		Handler:      r,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		ReadTimeout:  cfg.READTIMEOUT,
+		WriteTimeout: cfg.WRITETIMEOUT,
+		IdleTimeout:  cfg.IDLETIMEOUT,
 	}
 
 	go func() {
